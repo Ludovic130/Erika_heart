@@ -1,4 +1,4 @@
-name: Build APK with python-for-android
+name: Build APK with Docker (libffi patch)
 
 on:
   push:
@@ -10,66 +10,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install system dependencies
+      - name: Build APK with Docker + patch libffi
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            zlib1g-dev libncurses6 libncurses-dev \
-            libffi-dev libssl-dev liblzma-dev \
-            autoconf automake libtool \
-            git zip unzip openjdk-17-jdk \
-            wget
+          docker run --rm \
+            -v $(pwd):/home/user/host \
+            -v ~/.buildozer:/home/user/.buildozer \
+            -w /home/user/host \
+            ghcr.io/kivy/buildozer:latest \
+            sh -c "
+              # Install missing libtool dependencies
+              apt-get update && apt-get install -y libtool libltdl-dev
 
-      - name: Install python-for-android
-        run: |
-          pip install --upgrade pip
-          pip install python-for-android
+              # Patch libffi recipe to avoid autoreconf
+              sed -i 's/autoreconf -ivf/echo "skipping autoreconf"/g' /home/user/.venv/lib/python*/site-packages/pythonforandroid/recipes/libffi/__init__.py
 
-      - name: Set up Android SDK and NDK
-        run: |
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip -q commandlinetools-linux-11076708_latest.zip -d cmdline-tools/
-          mv cmdline-tools/cmdline-tools cmdline-tools/latest
-          rm commandlinetools-linux-11076708_latest.zip
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
-          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "build-tools;33.0.0" "platforms;android-33"
-          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "ndk;28.0.13004108"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/28.0.13004108" >> $GITHUB_ENV
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
-        env:
-          JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
-
-      - name: Build APK with p4a
-        run: |
-          p4a apk \
-            --private . \
-            --package=org.example.heartErika \
-            --name="My heart Erika" \
-            --version=0.1 \
-            --bootstrap=sdl2 \
-            --requirements=python3.10,kivy \
-            --arch=arm64-v8a \
-            --arch=armeabi-v7a \
-            --android-api=33 \
-            --ndk-api=24 \
-            --sdk-dir $ANDROID_SDK_ROOT \
-            --allow-root \
-            --debug
+              # Run buildozer with yes
+              yes | buildozer android debug
+            "
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
