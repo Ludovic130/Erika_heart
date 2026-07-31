@@ -42,7 +42,8 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3.10,kivy
+# MODIFICATION : Passage à python3.12 (stable) au lieu de python3.10
+requirements = python3.12,kivy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -109,15 +110,18 @@ fullscreen = 0
 #android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
-#android.api = 33
+# MODIFICATION : Décommente et explicite l'API cible (33 est courant pour Android 13)
+android.api = 33
 
 # (int) Minimum API your APK / AAB will support.
-#android.minapi = 24
+# MODIFICATION : Décommente et explicite l'API minimale (24 = Android 7.0)
+android.minapi = 24
 
 # (int) Android SDK version to use
 #android.sdk = 20
 
 # (str) Android NDK version to use
+# MODIFICATION : On laisse le NDK par défaut (28c), mais on peut préciser si besoin
 #android.ndk = 28c
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
@@ -214,7 +218,7 @@ android.accept_sdk_license = True
 # (bool) Enable AndroidX support. Enable when 'android.gradle_dependencies'
 # contains an 'androidx' package, or any package from Kotlin source.
 # android.enable_androidx requires android.api >= 28
-#android.enable_androidx = True
+# android.enable_androidx = True
 
 # (list) add java compile options
 # this can for example be necessary when importing certain java libraries using the 'android.gradle_dependencies' option
@@ -364,8 +368,8 @@ android.allow_backup = True
 #p4a.setup_py = false
 
 # (str) extra command line arguments to pass when invoking pythonforandroid.toolchain
-#p4a.extra_args =
-
+# MODIFICATION : Ajout de --disable-tests pour éviter la compilation des tests et économiser la RAM
+p4a.extra_args = --disable-tests
 
 
 #
@@ -495,5 +499,3 @@ warn_on_root = 1
 #        buildozer --profile demo android debug
 #
 #   Environment variable overrides have priority over profile overrides.
-android.recursive_clone = False
-android.gradle_dependencies = 
