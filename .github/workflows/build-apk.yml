@@ -19,7 +19,7 @@ jobs:
             -v $(pwd):/home/user/host \
             -v ~/.buildozer:/home/user/.buildozer \
             ghcr.io/kivy/buildozer:latest \
-            --force android debug
+            sh -c "echo y | buildozer android debug"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
