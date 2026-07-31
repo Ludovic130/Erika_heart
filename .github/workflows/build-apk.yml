@@ -13,16 +13,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build APK with Docker
-        run: |
-          docker run --rm \
-            -v $(pwd):/home/user/host \
-            -v ~/.buildozer:/home/user/.buildozer \
-            ghcr.io/kivy/buildozer:latest \
-            sh -c "echo y | buildozer android debug"
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Build APK
+        uses: kivy/buildozer-action@v1
         with:
-          name: Erika_heart_APK
-          path: bin/*.apk
+          command: android debug
+          buildozer_version: stable
